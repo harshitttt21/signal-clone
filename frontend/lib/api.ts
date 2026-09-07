@@ -19,6 +19,9 @@ export interface MessageOut {
   body: string;
   created_at: string;
   status: "sending" | "sent" | "delivered" | "read";
+  reply_to_message_id?: string | null;
+  reply_to_body?: string | null;
+  reply_to_sender_id?: string | null;
 }
 
 export interface ConversationMemberOut {
