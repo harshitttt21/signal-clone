@@ -38,14 +38,31 @@ export default function MessageBubble({
   isOwn,
   showSenderName,
   senderName,
+  replySenderName,
+  onReply,
 }: {
   message: MessageOut;
   isOwn: boolean;
   showSenderName?: boolean;
   senderName?: string;
+  replySenderName?: string;
+  onReply?: (message: MessageOut) => void;
 }) {
   return (
-    <div className={`flex ${isOwn ? "justify-end" : "justify-start"} px-4 mb-1.5`}>
+    <div className={`group flex items-center gap-2 ${isOwn ? "justify-end" : "justify-start"} px-4 mb-1.5`}>
+      {/* reply button on the left for own messages */}
+      {isOwn && onReply && (
+        <button
+          onClick={() => onReply(message)}
+          title="Reply"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-signal-textMuted hover:text-signal-blue"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 17l-5-5 5-5M4 12h11a4 4 0 0 1 4 4v2" />
+          </svg>
+        </button>
+      )}
+
       <div
         className={`relative max-w-[65%] rounded-2xl px-3.5 py-2 ${
           isOwn
@@ -58,6 +75,25 @@ export default function MessageBubble({
             {senderName}
           </p>
         )}
+
+        {/* quoted reply preview */}
+        {message.reply_to_message_id && message.reply_to_body && (
+          <div
+            className={`mb-1 rounded-md px-2 py-1 border-l-2 ${
+              isOwn
+                ? "bg-white/15 border-white/60"
+                : "bg-black/5 border-signal-blue"
+            }`}
+          >
+            <p className={`text-[10px] font-semibold ${isOwn ? "text-white/90" : "text-signal-blue"}`}>
+              {replySenderName || "Reply"}
+            </p>
+            <p className={`text-[12px] truncate ${isOwn ? "text-white/80" : "text-signal-textMuted"}`}>
+              {message.reply_to_body}
+            </p>
+          </div>
+        )}
+
         <p className="text-[14px] leading-snug whitespace-pre-wrap break-words">
           {message.body}
         </p>
@@ -70,6 +106,19 @@ export default function MessageBubble({
           {isOwn && <StatusTicks status={message.status} />}
         </div>
       </div>
+
+      {/* reply button on the right for others' messages */}
+      {!isOwn && onReply && (
+        <button
+          onClick={() => onReply(message)}
+          title="Reply"
+          className="opacity-0 group-hover:opacity-100 transition-opacity text-signal-textMuted hover:text-signal-blue"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 17l-5-5 5-5M4 12h11a4 4 0 0 1 4 4v2" />
+          </svg>
+        </button>
+      )}
     </div>
   );
 }
