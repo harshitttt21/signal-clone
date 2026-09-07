@@ -29,6 +29,7 @@ export default function ChatPage() {
   const [activeTab, setActiveTab] = useState<NavTab>("chats");
   const [showSettings, setShowSettings] = useState(false);
   const [replyTarget, setReplyTarget] = useState<MessageOut | null>(null);
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
@@ -69,6 +70,77 @@ export default function ChatPage() {
     },
     [user]
   );
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    if (!user) return;
+
+    const handler = (e: KeyboardEvent) => {
+      const mod = e.metaKey || e.ctrlKey;
+      const target = e.target as HTMLElement;
+      const typing =
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable;
+
+      // Esc: close modals / cancel reply (works even while typing)
+      if (e.key === "Escape") {
+        if (showShortcuts) return setShowShortcuts(false);
+        if (showNewChat) return setShowNewChat(false);
+        if (showNewGroup) return setShowNewGroup(false);
+        if (showGroupInfo) return setShowGroupInfo(false);
+        if (showSettings) return setShowSettings(false);
+        if (replyTarget) return setReplyTarget(null);
+        return;
+      }
+
+      // Cmd/Ctrl+K -> new chat
+      if (mod && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        setShowNewChat(true);
+        return;
+      }
+      // Cmd/Ctrl+G -> new group
+      if (mod && e.key.toLowerCase() === "g") {
+        e.preventDefault();
+        setShowNewGroup(true);
+        return;
+      }
+      // Cmd/Ctrl+/ -> shortcuts help
+      if (mod && e.key === "/") {
+        e.preventDefault();
+        setShowShortcuts((s) => !s);
+        return;
+      }
+
+      // Arrow up/down to move between conversations (only when not typing)
+      if (!typing && (e.key === "ArrowUp" || e.key === "ArrowDown")) {
+        if (conversations.length === 0) return;
+        e.preventDefault();
+        const idx = conversations.findIndex((c) => c.id === selectedIdRef.current);
+        let nextIdx;
+        if (e.key === "ArrowDown") {
+          nextIdx = idx < 0 ? 0 : Math.min(idx + 1, conversations.length - 1);
+        } else {
+          nextIdx = idx < 0 ? 0 : Math.max(idx - 1, 0);
+        }
+        openConversation(conversations[nextIdx].id);
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [
+    user,
+    conversations,
+    openConversation,
+    showShortcuts,
+    showNewChat,
+    showNewGroup,
+    showGroupInfo,
+    showSettings,
+    replyTarget,
+  ]);
 
   useEffect(() => {
     if (!user) return;
@@ -301,6 +373,50 @@ export default function ChatPage() {
       )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
+
+      {showShortcuts && (
+        <div
+          className="fixed inset-0 bg-black/40 flex items-center justify-center z-50"
+          onClick={() => setShowShortcuts(false)}
+        >
+          <div
+            className="bg-signal-bg rounded-2xl shadow-xl w-full max-w-sm overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-signal-border">
+              <h2 className="font-semibold text-[16px] text-signal-text">
+                Keyboard shortcuts
+              </h2>
+              <button
+                onClick={() => setShowShortcuts(false)}
+                className="w-8 h-8 rounded-full hover:bg-signal-panel flex items-center justify-center text-signal-textMuted"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            <div className="p-5 space-y-2.5">
+              {[
+                ["Send message", "Enter"],
+                ["New line", "Shift + Enter"],
+                ["New chat", "⌘ / Ctrl + K"],
+                ["New group", "⌘ / Ctrl + G"],
+                ["Next / previous chat", "↑ / ↓"],
+                ["Close / cancel", "Esc"],
+                ["This help", "⌘ / Ctrl + /"],
+              ].map(([label, keys]) => (
+                <div key={label} className="flex items-center justify-between">
+                  <span className="text-sm text-signal-text">{label}</span>
+                  <kbd className="text-[12px] font-medium text-signal-textMuted bg-signal-panel border border-signal-border rounded px-2 py-1">
+                    {keys}
+                  </kbd>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {showNewChat && (
         <NewChatModal onClose={() => setShowNewChat(false)} onCreated={handleConversationCreated} />
