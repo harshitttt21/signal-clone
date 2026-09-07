@@ -87,6 +87,7 @@ class Message(Base):
     conversation_id = Column(String, ForeignKey("conversations.id"), nullable=False)
     sender_id = Column(String, ForeignKey("users.id"), nullable=False)
     body = Column(Text, nullable=False)
+    reply_to_message_id = Column(String, ForeignKey("messages.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
 
     conversation = relationship("Conversation", back_populates="messages")
