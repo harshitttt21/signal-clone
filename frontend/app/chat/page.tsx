@@ -28,6 +28,7 @@ export default function ChatPage() {
   const [showGroupInfo, setShowGroupInfo] = useState(false);
   const [activeTab, setActiveTab] = useState<NavTab>("chats");
   const [showSettings, setShowSettings] = useState(false);
+  const [replyTarget, setReplyTarget] = useState<MessageOut | null>(null);
 
   const selectedIdRef = useRef<string | null>(null);
   selectedIdRef.current = selectedId;
@@ -187,6 +188,9 @@ export default function ChatPage() {
       body,
       created_at: new Date().toISOString(),
       status: "sending",
+      reply_to_message_id: replyTarget?.id ?? null,
+      reply_to_body: replyTarget?.body ?? null,
+      reply_to_sender_id: replyTarget?.sender_id ?? null,
     };
     setMessages((prev) => [...prev, optimistic]);
     setConversations((prev) => {
@@ -203,7 +207,9 @@ export default function ChatPage() {
       conversation_id: selectedId,
       body,
       client_temp_id: tempId,
+      reply_to_message_id: replyTarget?.id ?? null,
     });
+    setReplyTarget(null);
   };
 
   const handleTyping = (isTyping: boolean) => {
@@ -274,6 +280,9 @@ export default function ChatPage() {
           typingNames={typingNames}
           onlineMap={onlineMap}
           onOpenGroupInfo={() => setShowGroupInfo(true)}
+          replyTarget={replyTarget}
+          onReply={(m) => setReplyTarget(m)}
+          onCancelReply={() => setReplyTarget(null)}
         />
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center text-signal-textMuted bg-signal-panel/40">
