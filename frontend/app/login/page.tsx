@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { api } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,12 +19,35 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [wakingUp, setWakingUp] = useState(false);
+
+  // On load, ping the backend. If it doesn't answer quickly, it's likely a
+  // Render free-tier cold start (~50s), so show a friendly "waking up" banner.
+  useEffect(() => {
+    let done = false;
+    const slowTimer = setTimeout(() => {
+      if (!done) setWakingUp(true);
+    }, 2500);
+
+    api
+      .ping()
+      .catch(() => {})
+      .finally(() => {
+        done = true;
+        clearTimeout(slowTimer);
+        setWakingUp(false);
+      });
+
+    return () => clearTimeout(slowTimer);
+  }, []);
 
   const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     if (!phone.trim()) return;
     setSubmitting(true);
+    // if this request is slow, the backend is probably waking up
+    const slowTimer = setTimeout(() => setWakingUp(true), 2500);
     try {
       const res = await api.requestOtp(phone.trim());
       setInfo(res.message);
@@ -32,6 +55,8 @@ export default function LoginPage() {
     } catch (err: any) {
       setError(err.message || "Something went wrong");
     } finally {
+      clearTimeout(slowTimer);
+      setWakingUp(false);
       setSubmitting(false);
     }
   };
@@ -102,6 +127,20 @@ export default function LoginPage() {
           </p>
         </div>
 
+        {wakingUp && (
+          <div className="mb-4 flex items-start gap-2.5 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2.5">
+            <svg className="w-4 h-4 mt-0.5 flex-shrink-0 animate-spin text-amber-500" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="3" opacity="0.25" />
+              <path d="M21 12a9 9 0 0 0-9-9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+            </svg>
+            <p className="text-[12px] leading-snug text-amber-700">
+              Waking up the server… The backend is hosted on Render's free tier, which
+              sleeps after inactivity. This first load can take up to a minute — thanks
+              for your patience.
+            </p>
+          </div>
+        )}
+
         {step === "phone" && (
           <form onSubmit={handlePhoneSubmit} className="space-y-4">
             <div>
@@ -125,7 +164,7 @@ export default function LoginPage() {
               {submitting ? "Sending code…" : "Continue"}
             </button>
             <p className="text-[11px] text-signal-textMuted text-center pt-1">
-              Demo accounts: Harshit, garvit, vrinda, rhythm, vanshika — OTP is always 123456
+              Demo accounts: alice, bob, carol, dave, erin — OTP is always 123456
             </p>
           </form>
         )}
