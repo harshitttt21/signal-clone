@@ -14,6 +14,9 @@ export default function ChatPane({
   typingNames,
   onlineMap,
   onOpenGroupInfo,
+  replyTarget,
+  onReply,
+  onCancelReply,
 }: {
   conversation: ConversationOut;
   messages: MessageOut[];
@@ -23,6 +26,9 @@ export default function ChatPane({
   typingNames: string[];
   onlineMap: Record<string, boolean>;
   onOpenGroupInfo: () => void;
+  replyTarget: MessageOut | null;
+  onReply: (message: MessageOut) => void;
+  onCancelReply: () => void;
 }) {
   const [draft, setDraft] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -105,6 +111,14 @@ export default function ChatPane({
             conversation.is_group && m.sender_id !== currentUserId && m.sender_id !== lastSenderId;
           lastSenderId = m.sender_id;
           const sender = conversation.members.find((mem) => mem.user.id === m.sender_id)?.user;
+          const replySender = m.reply_to_sender_id
+            ? conversation.members.find((mem) => mem.user.id === m.reply_to_sender_id)?.user
+            : undefined;
+          const replySenderName = replySender
+            ? replySender.id === currentUserId
+              ? "You"
+              : replySender.display_name
+            : undefined;
           return (
             <MessageBubble
               key={m.id}
@@ -112,6 +126,8 @@ export default function ChatPane({
               isOwn={m.sender_id === currentUserId}
               showSenderName={showSenderName}
               senderName={sender?.display_name}
+              replySenderName={replySenderName}
+              onReply={onReply}
             />
           );
         })}
@@ -128,6 +144,29 @@ export default function ChatPane({
       </div>
 
       <div className="border-t border-signal-border px-4 py-3">
+        {replyTarget && (
+          <div className="flex items-center gap-2 mb-2 bg-signal-panel rounded-lg px-3 py-2 border-l-2 border-signal-blue">
+            <div className="flex-1 min-w-0">
+              <p className="text-[11px] font-semibold text-signal-blue">
+                Replying to{" "}
+                {replyTarget.sender_id === currentUserId
+                  ? "yourself"
+                  : conversation.members.find((m) => m.user.id === replyTarget.sender_id)?.user
+                      .display_name || "message"}
+              </p>
+              <p className="text-[12px] text-signal-textMuted truncate">{replyTarget.body}</p>
+            </div>
+            <button
+              onClick={onCancelReply}
+              title="Cancel reply"
+              className="text-signal-textMuted hover:text-signal-text flex-shrink-0"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+        )}
         <div className="flex items-end gap-2">
           <textarea
             value={draft}
