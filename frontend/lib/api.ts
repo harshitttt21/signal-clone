@@ -57,9 +57,19 @@ async function request<T>(
     let detail = res.statusText;
     try {
       const body = await res.json();
-      detail = body.detail || detail;
+      if (typeof body.detail === "string") {
+        // normal error: detail is a plain message
+        detail = body.detail;
+      } else if (Array.isArray(body.detail)) {
+        // FastAPI validation error: detail is an array of {msg, loc, ...}
+        detail = body.detail
+          .map((e: any) => e.msg || JSON.stringify(e))
+          .join(", ");
+      } else if (body.detail) {
+        detail = JSON.stringify(body.detail);
+      }
     } catch {
-      // ignore
+      // response wasn't JSON; keep statusText
     }
     throw new Error(detail);
   }
