@@ -41,6 +41,20 @@ def _derive_status(db: Session, message: models.Message, other_member_ids: List[
 def _to_message_out(db: Session, message: models.Message, conversation_id: str, exclude_user: str) -> schemas.MessageOut:
     others = [uid for uid in _member_ids(db, conversation_id) if uid != exclude_user]
     status = _derive_status(db, message, others)
+
+    reply_body = None
+    reply_sender = None
+    if message.reply_to_message_id:
+        original = (
+            db.query(models.Message)
+            .filter(models.Message.id == message.reply_to_message_id)
+            .first()
+        )
+        if original:
+            # short preview of the quoted message
+            reply_body = original.body[:120]
+            reply_sender = original.sender_id
+
     return schemas.MessageOut(
         id=message.id,
         conversation_id=message.conversation_id,
@@ -48,6 +62,9 @@ def _to_message_out(db: Session, message: models.Message, conversation_id: str, 
         body=message.body,
         created_at=message.created_at,
         status=status,
+        reply_to_message_id=message.reply_to_message_id,
+        reply_to_body=reply_body,
+        reply_to_sender_id=reply_sender,
     )
 
 
