@@ -78,6 +78,9 @@ async function request<T>(
 }
 
 export const api = {
+  // Hits the backend root to check if it's awake. Used to detect Render cold starts.
+  ping: () => request<{ status: string }>("/"),
+
   requestOtp: (phone_or_username: string) =>
     request<{ message: string }>("/auth/request-otp", {
       method: "POST",
