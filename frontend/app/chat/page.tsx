@@ -300,18 +300,13 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="h-screen w-full flex flex-col md:flex-row overflow-hidden">
-      {/* Nav rail: desktop/tablet only */}
-      <div className="hidden md:flex">
-        <NavRail
-          active={activeTab}
-          onChange={setActiveTab}
-          onOpenSettings={() => setShowSettings(true)}
-        />
-      </div>
+    <div className="h-screen w-full flex overflow-hidden">
+      <NavRail
+        active={activeTab}
+        onChange={setActiveTab}
+        onOpenSettings={() => setShowSettings(true)}
+      />
 
-      {/* Main content area */}
-      <div className="flex-1 flex overflow-hidden min-h-0">
       {activeTab === "calls" && (
         <PlaceholderView
           title="Calls"
@@ -339,22 +334,15 @@ export default function ChatPage() {
 
       {activeTab === "chats" && (
         <>
-      {/* Conversation list: full-width on mobile, fixed width on desktop.
-          On mobile, hidden once a conversation is open. */}
-      <div className={`${selectedConversation ? "hidden md:flex" : "flex"} w-full md:w-auto`}>
-        <ConversationList
-          conversations={conversations}
-          selectedId={selectedId}
-          onSelect={openConversation}
-          onNewChat={() => setShowNewChat(true)}
-          onNewGroup={() => setShowNewGroup(true)}
-          onlineMap={onlineMap}
-        />
-      </div>
-
-      {/* Chat pane: full-screen on mobile when open; hidden on mobile when no chat */}
+      <ConversationList
+        conversations={conversations}
+        selectedId={selectedId}
+        onSelect={openConversation}
+        onNewChat={() => setShowNewChat(true)}
+        onNewGroup={() => setShowNewGroup(true)}
+        onlineMap={onlineMap}
+      />
       {selectedConversation ? (
-        <div className={`${selectedConversation ? "flex" : "hidden"} flex-1 min-w-0`}>
         <ChatPane
           conversation={selectedConversation}
           messages={messages}
@@ -364,14 +352,12 @@ export default function ChatPage() {
           typingNames={typingNames}
           onlineMap={onlineMap}
           onOpenGroupInfo={() => setShowGroupInfo(true)}
-          onBack={() => setSelectedId(null)}
           replyTarget={replyTarget}
           onReply={(m) => setReplyTarget(m)}
           onCancelReply={() => setReplyTarget(null)}
         />
-        </div>
       ) : (
-        <div className="hidden md:flex flex-1 flex-col items-center justify-center text-signal-textMuted bg-signal-panel/40">
+        <div className="flex-1 flex flex-col items-center justify-center text-signal-textMuted bg-signal-panel/40">
           <div className="w-20 h-20 rounded-full bg-signal-blue/10 flex items-center justify-center mb-4">
             <svg width="34" height="34" viewBox="0 0 24 24" fill="none">
               <path
@@ -384,44 +370,6 @@ export default function ChatPage() {
         </div>
       )}
         </>
-      )}
-      </div>
-
-      {/* Bottom tab bar: mobile only. Hidden when a chat is open so it doesn't cover the composer. */}
-      {!selectedConversation && (
-        <div className="flex md:hidden border-t border-signal-border bg-signal-bg">
-          {([
-            ["chats", "Chats"],
-            ["calls", "Calls"],
-            ["stories", "Stories"],
-          ] as [NavTab, string][]).map(([tab, label]) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 flex flex-col items-center gap-0.5 py-2 ${
-                activeTab === tab ? "text-signal-blue" : "text-signal-textMuted"
-              }`}
-            >
-              {tab === "chats" && (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
-              )}
-              {tab === "calls" && (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.362 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-              )}
-              {tab === "stories" && (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="7" y="2" width="10" height="20" rx="3" /><path d="M3 6v12M21 6v12" opacity="0.5" /></svg>
-              )}
-              <span className="text-[10px] font-medium">{label}</span>
-            </button>
-          ))}
-          <button
-            onClick={() => setShowSettings(true)}
-            className="flex-1 flex flex-col items-center gap-0.5 py-2 text-signal-textMuted"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
-            <span className="text-[10px] font-medium">Settings</span>
-          </button>
-        </div>
       )}
 
       {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
