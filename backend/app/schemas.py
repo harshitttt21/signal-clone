@@ -49,6 +49,9 @@ class MessageOut(BaseModel):
     body: str
     created_at: datetime
     status: str  # sending | sent | delivered | read (derived)
+    reply_to_message_id: Optional[str] = None
+    reply_to_body: Optional[str] = None      # preview text of the quoted message
+    reply_to_sender_id: Optional[str] = None
 
     class Config:
         from_attributes = True
