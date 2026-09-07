@@ -81,6 +81,7 @@ async def handle_send_message(db: Session, user: models.User, data: dict):
     conversation_id = data.get("conversation_id")
     body = (data.get("body") or "").strip()
     client_temp_id = data.get("client_temp_id")
+    reply_to_message_id = data.get("reply_to_message_id")  # optional
     if not conversation_id or not body:
         return
 
@@ -95,7 +96,12 @@ async def handle_send_message(db: Session, user: models.User, data: dict):
     if not membership:
         return
 
-    message = models.Message(conversation_id=conversation_id, sender_id=user.id, body=body)
+    message = models.Message(
+        conversation_id=conversation_id,
+        sender_id=user.id,
+        body=body,
+        reply_to_message_id=reply_to_message_id,
+    )
     db.add(message)
     db.commit()
     db.refresh(message)
